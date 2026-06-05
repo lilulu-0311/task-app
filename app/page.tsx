@@ -60,9 +60,10 @@ export default function Home() {
     const hour = new Date().getHours();
     setIsNight(hour >= 18 || hour < 6);
     setIsPC(window.innerWidth >= 768);
-    const today = new Date().toISOString().split('T')[0];
-    setNewDate(today);
-    setFilterDate(today);
+    const d = new Date();
+    const localToday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    setNewDate(localToday);
+    setFilterDate(localToday);
     loadTasks();
     const handleResize = () => setIsPC(window.innerWidth >= 768);
     window.addEventListener('resize', handleResize);
@@ -230,8 +231,13 @@ export default function Home() {
     ? tasks.filter(t => !t.date || t.date === filterDate)
     : tasks;
 
-  const today = new Date().toISOString().split('T')[0];
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  const getLocalDate = (offset = 0) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const today = getLocalDate(0);
+  const tomorrow = getLocalDate(1);
 
   if (loading) return (
     <main style={{ background: bg, minHeight: '100vh', maxWidth: isPC ? 800 : 375, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

@@ -176,14 +176,16 @@ export default function Home() {
   const headerGrad = isNight ? 'linear-gradient(135deg, #2D3561, #4A3F7A)' : 'linear-gradient(135deg, #F4845F, #F9B347)';
   const greeting = isNight ? 'おつかれさま、利恵さん 🌙\nゆっくり明日の準備をしよう' : 'おはよう、利恵さん ☀️\n今日も一緒に進もうね';
 
+  const isPC = typeof window !== 'undefined' && window.innerWidth >= 768;
+
   if (loading) return (
-    <main style={{ background: bg, minHeight: '100vh', maxWidth: 375, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <main style={{ background: bg, minHeight: '100vh', maxWidth: isPC ? 800 : 375, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <p style={{ color: isNight ? '#9B8EC4' : '#C48050', fontSize: 16 }}>読み込み中...</p>
     </main>
   );
 
   return (
-    <main style={{ background: bg, minHeight: '100vh', maxWidth: 375, margin: '0 auto', fontFamily: "'Hiragino Maru Gothic Pro', sans-serif" }}>
+    <main style={{ background: bg, minHeight: '100vh', maxWidth: isPC ? 800 : 375, margin: '0 auto', fontFamily: "'Hiragino Maru Gothic Pro', sans-serif" }}>
 
       {alarmTask && (
         <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: 375, height: '100%', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
@@ -290,8 +292,9 @@ export default function Home() {
           </div>
         )}
 
+        <div style={{ display: 'grid', gridTemplateColumns: isPC ? '1fr 1fr' : '1fr', gap: 10 }}>
         {tasks.map(task => (
-          <div key={task.id} style={{ background: cardBg, borderRadius: 16, padding: '14px 16px', marginBottom: 10, borderLeft: `4px solid ${isNight ? '#6B5FA0' : '#F4845F'}`, opacity: task.done ? 0.5 : 1 }}>
+          <div key={task.id} style={{ background: cardBg, borderRadius: 16, padding: '14px 16px', marginBottom: 0, borderLeft: `4px solid ${isNight ? '#6B5FA0' : '#F4845F'}`, opacity: task.done ? 0.5 : 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <span style={{ fontWeight: 'bold', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 14 }}>
                 {task.done ? '✅ ' : ''}{task.name}
@@ -309,6 +312,7 @@ export default function Home() {
             )}
           </div>
         ))}
+        </div>
 
         {showForm && (
           <div style={{ background: cardBg, borderRadius: 16, padding: '16px', marginBottom: 10 }}>

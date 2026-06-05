@@ -36,7 +36,8 @@ export default function Home() {
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateTime, setNewTemplateTime] = useState('');
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
 
   const praiseMessages = ['やったね！✨', 'すごい！その調子！', '一歩前進！🎉', 'よくできました！', '素晴らしい！🌟'];
 

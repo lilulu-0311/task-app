@@ -281,11 +281,11 @@ export default function Home() {
       </div>
 
       {/* 日付フィルター */}
-      <div style={{ padding: '0 16px 12px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ padding: '0 16px 12px', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         {[{ label: '今日', value: today }, { label: '明日', value: tomorrow }, { label: '全て', value: '' }].map(d => (
-          <button key={d.value} onClick={() => setFilterDate(d.value)} style={{ background: filterDate === d.value ? (isNight ? '#6B5FA0' : '#F4845F') : (isNight ? '#2D3561' : '#FFF0DC'), color: filterDate === d.value ? 'white' : (isNight ? '#9B8EC4' : '#C46020'), border: 'none', borderRadius: 14, padding: '6px 16px', fontSize: 12, fontWeight: 'bold', cursor: 'pointer' }}>{d.label}</button>
+          <button key={d.value} onClick={() => setFilterDate(d.value)} style={{ background: filterDate === d.value ? (isNight ? '#6B5FA0' : '#F4845F') : (isNight ? '#2D3561' : '#FFF0DC'), color: filterDate === d.value ? 'white' : (isNight ? '#9B8EC4' : '#C46020'), border: 'none', borderRadius: 14, padding: '6px 16px', fontSize: 12, fontWeight: 'bold', cursor: 'pointer', height: 32 }}>{d.label}</button>
         ))}
-        <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ background: isNight ? '#2D3561' : '#FFF0DC', color: isNight ? '#9B8EC4' : '#C46020', border: 'none', borderRadius: 14, padding: '6px 12px', fontSize: 12, cursor: 'pointer', outline: 'none' }} />
+        <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ background: isNight ? '#2D3561' : '#FFF0DC', color: isNight ? '#9B8EC4' : '#C46020', border: 'none', borderRadius: 14, padding: '6px 12px', fontSize: 12, cursor: 'pointer', outline: 'none', height: 32 }} />
       </div>
 
       {/* よく使うタスク */}

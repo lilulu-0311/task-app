@@ -37,11 +37,7 @@ export default function Home() {
   const [praise, setPraise] = useState('');
   const [warning, setWarning] = useState('');
   const [filterDate, setFilterDate] = useState('');
-  const [templates, setTemplates] = useState<Template[]>([
-    { id: 1, name: '朝のスケジュール確認', time: '8:00' },
-    { id: 2, name: 'タスクの整理', time: '9:00' },
-    { id: 3, name: 'アイデアを出す', time: '10:00' },
-  ]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateTime, setNewTemplateTime] = useState('');
@@ -65,6 +61,7 @@ export default function Home() {
     setNewDate(localToday);
     setFilterDate(localToday);
     loadTasks();
+    loadTemplates();
     const handleResize = () => setIsPC(window.innerWidth >= 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -74,6 +71,11 @@ export default function Home() {
     const { data } = await supabase.from('tasks').select('*').order('date').order('time');
     if (data) setTasks(data);
     setLoading(false);
+  };
+
+  const loadTemplates = async () => {
+    const { data } = await supabase.from('templates').select('*').order('id');
+    if (data) setTemplates(data);
   };
 
   // アラームチェック（10秒ごと）
@@ -214,13 +216,20 @@ export default function Home() {
     showPraise();
   };
 
-  const addTemplate = () => {
+  const addTemplate = async () => {
     if (!newTemplateName.trim()) return;
-    setTemplates([...templates, { id: Date.now(), name: newTemplateName, time: newTemplateTime || '--:--' }]);
+    const { data } = await supabase.from('templates').insert({
+      name: newTemplateName,
+      time: newTemplateTime || '--:--',
+    }).select().single();
+    if (data) setTemplates([...templates, data]);
     setNewTemplateName(''); setNewTemplateTime(''); setShowTemplateForm(false);
   };
 
-  const deleteTemplate = (id: number) => setTemplates(templates.filter(t => t.id !== id));
+  const deleteTemplate = async (id: number) => {
+    await supabase.from('templates').delete().eq('id', id);
+    setTemplates(templates.filter(t => t.id !== id));
+  };
 
   const bg = isNight ? '#2E3450' : '#EDD5B8';
   const cardBg = isNight ? '#384068' : '#FAEBD8';

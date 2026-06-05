@@ -227,9 +227,15 @@ export default function Home() {
   const headerGrad = isNight ? 'linear-gradient(135deg, #2D3561, #4A3F7A)' : 'linear-gradient(135deg, #F4845F, #F9B347)';
   const greeting = isNight ? 'おつかれさま、利恵さん 🌙\nゆっくり明日の準備をしよう' : 'おはよう、利恵さん ☀️\n今日も一緒に進もうね';
 
-  const filteredTasks = filterDate
+  const filteredTasks = (filterDate
     ? tasks.filter(t => !t.date || t.date === filterDate)
-    : tasks;
+    : tasks
+  ).sort((a, b) => {
+    if (a.date && b.date && a.date !== b.date) return a.date.localeCompare(b.date);
+    if (a.time === '--:--') return 1;
+    if (b.time === '--:--') return -1;
+    return a.time.localeCompare(b.time);
+  });
 
   const getLocalDate = (offset = 0) => {
     const d = new Date();

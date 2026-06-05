@@ -105,13 +105,15 @@ export default function Home() {
   };
 
   const startVoice = () => {
-    const SpeechRecognition = window.SpeechRecognition || (window as typeof window & { webkitSpeechRecognition: typeof SpeechRecognition }).webkitSpeechRecognition;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) { setVoiceStatus('このブラウザは音声入力に対応していません'); return; }
     const recognition = new SpeechRecognition();
     recognition.lang = 'ja-JP';
     recognition.interimResults = false;
     recognition.onstart = () => { setListening(true); setVoiceStatus('聞いています...話しかけてね 🎤'); };
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (event: any) => {
       const text = event.results[0][0].transcript;
       setNewTask(text);
       setShowForm(true);

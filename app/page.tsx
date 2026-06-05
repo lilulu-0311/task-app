@@ -19,6 +19,7 @@ type Template = {
 
 export default function Home() {
   const [isNight, setIsNight] = useState(false);
+  const [isPC, setIsPC] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [newTask, setNewTask] = useState('');
@@ -50,7 +51,11 @@ export default function Home() {
   useEffect(() => {
     const hour = new Date().getHours();
     setIsNight(hour >= 18 || hour < 6);
+    setIsPC(window.innerWidth >= 768);
     loadTasks();
+    const handleResize = () => setIsPC(window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const loadTasks = async () => {
@@ -115,6 +120,7 @@ export default function Home() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onresult = (event: any) => {
       const text = event.results[0][0].transcript;
+      recognition.stop();
       setNewTask(text);
       setShowForm(true);
       setVoiceStatus('「' + text + '」と聞こえたよ！');
@@ -175,8 +181,6 @@ export default function Home() {
   const cardBg = isNight ? '#384068' : '#FAEBD8';
   const headerGrad = isNight ? 'linear-gradient(135deg, #2D3561, #4A3F7A)' : 'linear-gradient(135deg, #F4845F, #F9B347)';
   const greeting = isNight ? 'おつかれさま、利恵さん 🌙\nゆっくり明日の準備をしよう' : 'おはよう、利恵さん ☀️\n今日も一緒に進もうね';
-
-  const isPC = typeof window !== 'undefined' && window.innerWidth >= 768;
 
   if (loading) return (
     <main style={{ background: bg, minHeight: '100vh', maxWidth: isPC ? 800 : 375, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -292,9 +296,26 @@ export default function Home() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: isPC ? '1fr 1fr' : '1fr', gap: 10 }}>
-        {tasks.map(task => (
-          <div key={task.id} style={{ background: cardBg, borderRadius: 16, padding: '14px 16px', marginBottom: 0, borderLeft: `4px solid ${isNight ? '#6B5FA0' : '#F4845F'}`, opacity: task.done ? 0.5 : 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isPC ? 4 : 10 }}>
+        {tasks.map(task => isPC ? (
+          // PCコンパクト表示
+          <div key={task.id} style={{ background: cardBg, borderRadius: 10, padding: '8px 14px', borderLeft: `3px solid ${isNight ? '#6B5FA0' : '#F4845F'}`, opacity: task.done ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontWeight: 'bold', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 13, flex: 1 }}>
+              {task.done ? '✅ ' : ''}{task.name}
+            </span>
+            <span style={{ fontSize: 11, color: isNight ? '#9B8EC4' : '#C46020', whiteSpace: 'nowrap' }}>⏰ {task.time}</span>
+            {!task.done && (
+              <>
+                <button onClick={() => completeTask(task.id)} style={{ background: '#7AB87E', color: 'white', border: 'none', borderRadius: 14, padding: '4px 12px', fontSize: 11, fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>完了</button>
+                {[15, 30, 60, 120].map(m => (
+                  <button key={m} onClick={() => snoozeTask(task.id, m)} style={{ background: isNight ? '#2D3561' : '#FFF0DC', color: isNight ? '#9B8EC4' : '#F4845F', border: `1px solid ${isNight ? '#3D4575' : '#F4C89A'}`, borderRadius: 10, padding: '3px 7px', fontSize: 10, cursor: 'pointer', whiteSpace: 'nowrap' }}>{m}分</button>
+                ))}
+              </>
+            )}
+          </div>
+        ) : (
+          // スマホカード表示
+          <div key={task.id} style={{ background: cardBg, borderRadius: 16, padding: '14px 16px', borderLeft: `4px solid ${isNight ? '#6B5FA0' : '#F4845F'}`, opacity: task.done ? 0.5 : 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
               <span style={{ fontWeight: 'bold', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 14 }}>
                 {task.done ? '✅ ' : ''}{task.name}

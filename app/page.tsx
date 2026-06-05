@@ -7,6 +7,9 @@ type Task = {
   id: number;
   name: string;
   time: string;
+  end_time: string;
+  date: string;
+  buffer: number;
   done: boolean;
   snoozedUntil?: string;
 };
@@ -24,11 +27,16 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const [newTask, setNewTask] = useState('');
   const [newTime, setNewTime] = useState('');
+  const [newEndTime, setNewEndTime] = useState('');
+  const [newDate, setNewDate] = useState('');
+  const [newBuffer, setNewBuffer] = useState(15);
   const [listening, setListening] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState('タスクを声で追加できるよ');
   const [alarmTask, setAlarmTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
   const [praise, setPraise] = useState('');
+  const [warning, setWarning] = useState('');
+  const [filterDate, setFilterDate] = useState('');
   const [templates, setTemplates] = useState<Template[]>([
     { id: 1, name: '朝のスケジュール確認', time: '8:00' },
     { id: 2, name: 'タスクの整理', time: '9:00' },
@@ -52,6 +60,9 @@ export default function Home() {
     const hour = new Date().getHours();
     setIsNight(hour >= 18 || hour < 6);
     setIsPC(window.innerWidth >= 768);
+    const today = new Date().toISOString().split('T')[0];
+    setNewDate(today);
+    setFilterDate(today);
     loadTasks();
     const handleResize = () => setIsPC(window.innerWidth >= 768);
     window.addEventListener('resize', handleResize);
@@ -59,7 +70,7 @@ export default function Home() {
   }, []);
 
   const loadTasks = async () => {
-    const { data } = await supabase.from('tasks').select('*').order('id');
+    const { data } = await supabase.from('tasks').select('*').order('date').order('time');
     if (data) setTasks(data);
     setLoading(false);
   };
@@ -68,13 +79,23 @@ export default function Home() {
   useEffect(() => {
     const check = () => {
       const now = new Date();
+      const today = now.toISOString().split('T')[0];
       const hh = String(now.getHours()).padStart(2, '0');
       const mm = String(now.getMinutes()).padStart(2, '0');
       const currentTime = `${hh}:${mm}`;
+
       tasks.forEach(task => {
-        if (!task.done && task.time === currentTime) {
+        if (task.done) return;
+        if (task.date && task.date !== today) return;
+        if (task.time === currentTime) {
           if (task.snoozedUntil && task.snoozedUntil > currentTime) return;
           setAlarmTask(task);
+          playAlarm();
+        }
+        // 15分前アラーム
+        const taskDate = new Date(`${task.date || today}T${task.time}:00`);
+        const diff = (taskDate.getTime() - now.getTime()) / 1000 / 60;
+        if (diff > 14.5 && diff < 15.5) {
           playAlarm();
         }
       });
@@ -109,6 +130,25 @@ export default function Home() {
     setAlarmTask(null);
   };
 
+  // ダブルブッキング検知
+  const checkDoubleBooking = (date: string, time: string, endTime: string, buffer: number, excludeId?: number) => {
+    if (!time) return false;
+    const toMin = (t: string) => {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    };
+    const newStart = toMin(time) - buffer;
+    const newEnd = endTime ? toMin(endTime) + buffer : toMin(time) + 30 + buffer;
+
+    return tasks.some(t => {
+      if (t.done || t.id === excludeId) return false;
+      if (t.date && date && t.date !== date) return false;
+      const tStart = toMin(t.time) - (t.buffer || 0);
+      const tEnd = t.end_time ? toMin(t.end_time) + (t.buffer || 0) : toMin(t.time) + 30 + (t.buffer || 0);
+      return newStart < tEnd && newEnd > tStart;
+    });
+  };
+
   const startVoice = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -141,13 +181,22 @@ export default function Home() {
 
   const addTask = async () => {
     if (!newTask.trim()) return;
+    const isDouble = checkDoubleBooking(newDate, newTime, newEndTime, newBuffer);
+    if (isDouble) {
+      setWarning('⚠️ この時間帯は他の予定と重なっています！');
+      return;
+    }
+    setWarning('');
     const { data } = await supabase.from('tasks').insert({
       name: newTask,
       time: newTime || '--:--',
+      end_time: newEndTime || '',
+      date: newDate || '',
+      buffer: newBuffer,
       done: false,
     }).select().single();
     if (data) setTasks([...tasks, data]);
-    setNewTask(''); setNewTime(''); setShowForm(false);
+    setNewTask(''); setNewTime(''); setNewEndTime(''); setShowForm(false);
     setVoiceStatus('タスクを声で追加できるよ');
   };
 
@@ -155,6 +204,9 @@ export default function Home() {
     const { data } = await supabase.from('tasks').insert({
       name: template.name,
       time: template.time,
+      end_time: '',
+      date: newDate,
+      buffer: 15,
       done: false,
     }).select().single();
     if (data) setTasks([...tasks, data]);
@@ -163,24 +215,23 @@ export default function Home() {
 
   const addTemplate = () => {
     if (!newTemplateName.trim()) return;
-    setTemplates([...templates, {
-      id: Date.now(),
-      name: newTemplateName,
-      time: newTemplateTime || '--:--',
-    }]);
-    setNewTemplateName('');
-    setNewTemplateTime('');
-    setShowTemplateForm(false);
+    setTemplates([...templates, { id: Date.now(), name: newTemplateName, time: newTemplateTime || '--:--' }]);
+    setNewTemplateName(''); setNewTemplateTime(''); setShowTemplateForm(false);
   };
 
-  const deleteTemplate = (id: number) => {
-    setTemplates(templates.filter(t => t.id !== id));
-  };
+  const deleteTemplate = (id: number) => setTemplates(templates.filter(t => t.id !== id));
 
   const bg = isNight ? '#2E3450' : '#EDD5B8';
   const cardBg = isNight ? '#384068' : '#FAEBD8';
   const headerGrad = isNight ? 'linear-gradient(135deg, #2D3561, #4A3F7A)' : 'linear-gradient(135deg, #F4845F, #F9B347)';
   const greeting = isNight ? 'おつかれさま、利恵さん 🌙\nゆっくり明日の準備をしよう' : 'おはよう、利恵さん ☀️\n今日も一緒に進もうね';
+
+  const filteredTasks = filterDate
+    ? tasks.filter(t => !t.date || t.date === filterDate)
+    : tasks;
+
+  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
   if (loading) return (
     <main style={{ background: bg, minHeight: '100vh', maxWidth: isPC ? 800 : 375, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -191,8 +242,9 @@ export default function Home() {
   return (
     <main style={{ background: bg, minHeight: '100vh', maxWidth: isPC ? 800 : 375, margin: '0 auto', fontFamily: "'Hiragino Maru Gothic Pro', sans-serif" }}>
 
+      {/* アラームポップアップ */}
       {alarmTask && (
-        <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: 375, height: '100%', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+        <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: isPC ? 800 : 375, height: '100%', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: isNight ? '#2E3450' : '#FFF8EE', borderRadius: 24, padding: 28, margin: 20, textAlign: 'center' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>⏰</div>
             <div style={{ fontWeight: 'bold', fontSize: 18, color: isNight ? '#E8E0F5' : '#4A2E1A', marginBottom: 8 }}>時間だよ！</div>
@@ -207,6 +259,14 @@ export default function Home() {
         </div>
       )}
 
+      {/* 励ましメッセージ */}
+      {praise && (
+        <div style={{ position: 'fixed', top: '40%', left: '50%', transform: 'translateX(-50%)', background: isNight ? '#4A3F7A' : '#F4845F', color: 'white', borderRadius: 20, padding: '16px 32px', fontSize: 20, fontWeight: 'bold', zIndex: 200, boxShadow: '0 8px 30px rgba(0,0,0,0.25)', whiteSpace: 'nowrap' }}>
+          {praise}
+        </div>
+      )}
+
+      {/* ヘッダー */}
       <div style={{ background: headerGrad, padding: '28px 20px 24px', borderRadius: '0 0 24px 24px' }}>
         <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, marginBottom: 6 }}>
           {new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}
@@ -214,71 +274,38 @@ export default function Home() {
         <div style={{ color: 'white', fontSize: 18, fontWeight: 'bold', lineHeight: 1.5, whiteSpace: 'pre-line' }}>{greeting}</div>
       </div>
 
-      {/* 励ましメッセージ */}
-      {praise && (
-        <div style={{
-          position: 'fixed', top: '40%', left: '50%', transform: 'translateX(-50%)',
-          background: isNight ? '#4A3F7A' : '#F4845F',
-          color: 'white', borderRadius: 20, padding: '16px 32px',
-          fontSize: 20, fontWeight: 'bold', zIndex: 200,
-          boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
-          animation: 'fadeIn 0.3s ease',
-          whiteSpace: 'nowrap'
-        }}>
-          {praise}
-        </div>
-      )}
+      {/* 音声入力 */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 20px 12px' }}>
+        <button onClick={startVoice} style={{ width: 80, height: 80, borderRadius: '50%', background: listening ? 'linear-gradient(135deg, #E05050, #F08080)' : isNight ? 'linear-gradient(135deg, #2D3561, #6B5FA0)' : 'linear-gradient(135deg, #F4845F, #F9B347)', border: listening ? '3px solid #FF6060' : 'none', cursor: 'pointer', fontSize: 28, color: 'white', boxShadow: listening ? '0 0 20px rgba(255,100,100,0.5)' : '0 6px 24px rgba(0,0,0,0.2)', transform: listening ? 'scale(1.08)' : 'scale(1)', transition: 'all 0.2s' }}>🎤</button>
+        <p style={{ color: isNight ? '#7A70A0' : '#C48050', fontSize: 12, marginTop: 8, textAlign: 'center' }}>{voiceStatus}</p>
+      </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '28px 20px 20px' }}>
-        <button onClick={startVoice} style={{
-          width: 88, height: 88, borderRadius: '50%',
-          background: listening ? 'linear-gradient(135deg, #E05050, #F08080)' : isNight ? 'linear-gradient(135deg, #2D3561, #6B5FA0)' : 'linear-gradient(135deg, #F4845F, #F9B347)',
-          border: listening ? '3px solid #FF6060' : 'none', cursor: 'pointer', fontSize: 32, color: 'white',
-          boxShadow: listening ? '0 0 20px rgba(255,100,100,0.5)' : '0 6px 24px rgba(0,0,0,0.2)',
-          transform: listening ? 'scale(1.08)' : 'scale(1)', transition: 'all 0.2s'
-        }}>🎤</button>
-        <p style={{ color: isNight ? '#7A70A0' : '#C48050', fontSize: 12, marginTop: 10, textAlign: 'center' }}>{voiceStatus}</p>
+      {/* 日付フィルター */}
+      <div style={{ padding: '0 16px 12px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {[{ label: '今日', value: today }, { label: '明日', value: tomorrow }, { label: '全て', value: '' }].map(d => (
+          <button key={d.value} onClick={() => setFilterDate(d.value)} style={{ background: filterDate === d.value ? (isNight ? '#6B5FA0' : '#F4845F') : (isNight ? '#2D3561' : '#FFF0DC'), color: filterDate === d.value ? 'white' : (isNight ? '#9B8EC4' : '#C46020'), border: 'none', borderRadius: 14, padding: '6px 16px', fontSize: 12, fontWeight: 'bold', cursor: 'pointer' }}>{d.label}</button>
+        ))}
+        <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ background: isNight ? '#2D3561' : '#FFF0DC', color: isNight ? '#9B8EC4' : '#C46020', border: 'none', borderRadius: 14, padding: '6px 12px', fontSize: 12, cursor: 'pointer', outline: 'none' }} />
       </div>
 
       {/* よく使うタスク */}
-      <div style={{ padding: '0 16px 16px' }}>
+      <div style={{ padding: '0 16px 12px' }}>
         <div style={{ color: isNight ? '#9B8EC4' : '#E07B3A', fontSize: 13, fontWeight: 'bold', marginBottom: 10 }}>よく使うタスク</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
           {templates.map(t => (
             <div key={t.id} style={{ position: 'relative' }}>
-              <button onClick={() => addFromTemplate(t)} style={{
-                background: isNight ? '#2D3561' : '#FFF0DC',
-                color: isNight ? '#E8E0F5' : '#4A2E1A',
-                border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`,
-                borderRadius: 12, padding: '8px 28px 8px 12px',
-                fontSize: 12, fontWeight: 'bold', cursor: 'pointer',
-              }}>
-                {t.name}
-                <span style={{ fontSize: 10, color: isNight ? '#9B8EC4' : '#C46020', marginLeft: 4 }}>⏰{t.time}</span>
+              <button onClick={() => addFromTemplate(t)} style={{ background: isNight ? '#2D3561' : '#FFF0DC', color: isNight ? '#E8E0F5' : '#4A2E1A', border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`, borderRadius: 12, padding: '8px 28px 8px 12px', fontSize: 12, fontWeight: 'bold', cursor: 'pointer' }}>
+                {t.name}<span style={{ fontSize: 10, color: isNight ? '#9B8EC4' : '#C46020', marginLeft: 4 }}>⏰{t.time}</span>
               </button>
-              <button onClick={() => deleteTemplate(t.id)} style={{
-                position: 'absolute', top: -6, right: -6,
-                background: '#E07B7B', color: 'white', border: 'none',
-                borderRadius: '50%', width: 18, height: 18,
-                fontSize: 10, cursor: 'pointer', lineHeight: '18px', padding: 0
-              }}>×</button>
+              <button onClick={() => deleteTemplate(t.id)} style={{ position: 'absolute', top: -6, right: -6, background: '#E07B7B', color: 'white', border: 'none', borderRadius: '50%', width: 18, height: 18, fontSize: 10, cursor: 'pointer', lineHeight: '18px', padding: 0 }}>×</button>
             </div>
           ))}
-          <button onClick={() => setShowTemplateForm(true)} style={{
-            background: 'transparent',
-            color: isNight ? '#7A70A0' : '#C48050',
-            border: `1px dashed ${isNight ? '#4D5585' : '#E8C8A0'}`,
-            borderRadius: 12, padding: '8px 12px',
-            fontSize: 12, cursor: 'pointer',
-          }}>＋ 追加</button>
+          <button onClick={() => setShowTemplateForm(true)} style={{ background: 'transparent', color: isNight ? '#7A70A0' : '#C48050', border: `1px dashed ${isNight ? '#4D5585' : '#E8C8A0'}`, borderRadius: 12, padding: '8px 12px', fontSize: 12, cursor: 'pointer' }}>＋ 追加</button>
         </div>
-
         {showTemplateForm && (
           <div style={{ background: cardBg, borderRadius: 16, padding: '14px', marginBottom: 12 }}>
-            <input type="text" placeholder="タスク名" value={newTemplateName} onChange={e => setNewTemplateName(e.target.value)}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 10, marginBottom: 8, border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`, background: isNight ? '#2E3450' : '#FFF8EE', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 13, outline: 'none' }} />
-            <input type="time" value={newTemplateTime} onChange={e => setNewTemplateTime(e.target.value)}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 10, marginBottom: 10, border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`, background: isNight ? '#2E3450' : '#FFF8EE', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 13, outline: 'none' }} />
+            <input type="text" placeholder="タスク名" value={newTemplateName} onChange={e => setNewTemplateName(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: 10, marginBottom: 8, border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`, background: isNight ? '#2E3450' : '#FFF8EE', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 13, outline: 'none' }} />
+            <input type="time" value={newTemplateTime} onChange={e => setNewTemplateTime(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: 10, marginBottom: 10, border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`, background: isNight ? '#2E3450' : '#FFF8EE', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 13, outline: 'none' }} />
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={addTemplate} style={{ flex: 1, background: isNight ? '#4A5E8A' : '#7AB87E', color: 'white', border: 'none', borderRadius: 10, padding: '8px', fontSize: 13, fontWeight: 'bold', cursor: 'pointer' }}>保存</button>
               <button onClick={() => setShowTemplateForm(false)} style={{ flex: 1, background: isNight ? '#384068' : '#F0E0CC', color: isNight ? '#9B8EC4' : '#A0876E', border: 'none', borderRadius: 10, padding: '8px', fontSize: 13, cursor: 'pointer' }}>キャンセル</button>
@@ -287,68 +314,83 @@ export default function Home() {
         )}
       </div>
 
+      {/* タスク一覧 */}
       <div style={{ padding: '0 16px 16px' }}>
         <div style={{ color: isNight ? '#9B8EC4' : '#E07B3A', fontSize: 13, fontWeight: 'bold', marginBottom: 12 }}>今日のタスク</div>
 
-        {tasks.length === 0 && (
-          <div style={{ textAlign: 'center', color: isNight ? '#7A70A0' : '#C48050', fontSize: 14, padding: '20px 0' }}>
-            タスクを追加してみてね！
-          </div>
+        {filteredTasks.length === 0 && (
+          <div style={{ textAlign: 'center', color: isNight ? '#7A70A0' : '#C48050', fontSize: 14, padding: '20px 0' }}>タスクを追加してみてね！</div>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: isPC ? 4 : 10 }}>
-        {tasks.map(task => isPC ? (
-          // PCコンパクト表示
-          <div key={task.id} style={{ background: cardBg, borderRadius: 10, padding: '8px 14px', borderLeft: `3px solid ${isNight ? '#6B5FA0' : '#F4845F'}`, opacity: task.done ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontWeight: 'bold', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 13, flex: 1 }}>
-              {task.done ? '✅ ' : ''}{task.name}
-            </span>
-            <span style={{ fontSize: 11, color: isNight ? '#9B8EC4' : '#C46020', whiteSpace: 'nowrap' }}>⏰ {task.time}</span>
-            {!task.done && (
-              <>
-                <button onClick={() => completeTask(task.id)} style={{ background: '#7AB87E', color: 'white', border: 'none', borderRadius: 14, padding: '4px 12px', fontSize: 11, fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>完了</button>
-                {[15, 30, 60, 120].map(m => (
-                  <button key={m} onClick={() => snoozeTask(task.id, m)} style={{ background: isNight ? '#2D3561' : '#FFF0DC', color: isNight ? '#9B8EC4' : '#F4845F', border: `1px solid ${isNight ? '#3D4575' : '#F4C89A'}`, borderRadius: 10, padding: '3px 7px', fontSize: 10, cursor: 'pointer', whiteSpace: 'nowrap' }}>{m}分</button>
-                ))}
-              </>
-            )}
-          </div>
-        ) : (
-          // スマホカード表示
-          <div key={task.id} style={{ background: cardBg, borderRadius: 16, padding: '14px 16px', borderLeft: `4px solid ${isNight ? '#6B5FA0' : '#F4845F'}`, opacity: task.done ? 0.5 : 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-              <span style={{ fontWeight: 'bold', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 14 }}>
-                {task.done ? '✅ ' : ''}{task.name}
-              </span>
-              <span style={{ fontSize: 11, background: isNight ? '#2D3561' : '#FFF0DC', color: isNight ? '#9B8EC4' : '#C46020', padding: '2px 8px', borderRadius: 10 }}>⏰ {task.time}</span>
+          {filteredTasks.map(task => isPC ? (
+            <div key={task.id} style={{ background: cardBg, borderRadius: 10, padding: '8px 14px', borderLeft: `3px solid ${isNight ? '#6B5FA0' : '#F4845F'}`, opacity: task.done ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontWeight: 'bold', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 13, flex: 1 }}>{task.done ? '✅ ' : ''}{task.name}</span>
+              {task.date && <span style={{ fontSize: 11, color: isNight ? '#7A70A0' : '#A0876E', whiteSpace: 'nowrap' }}>📅 {task.date}</span>}
+              <span style={{ fontSize: 11, color: isNight ? '#9B8EC4' : '#C46020', whiteSpace: 'nowrap' }}>⏰ {task.time}{task.end_time ? `〜${task.end_time}` : ''}</span>
+              {task.buffer > 0 && <span style={{ fontSize: 10, color: isNight ? '#6B5FA0' : '#A0876E', whiteSpace: 'nowrap' }}>+{task.buffer}分</span>}
+              {!task.done && (
+                <>
+                  <button onClick={() => completeTask(task.id)} style={{ background: '#7AB87E', color: 'white', border: 'none', borderRadius: 14, padding: '4px 12px', fontSize: 11, fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap' }}>完了</button>
+                  {[15, 30, 60, 120].map(m => (
+                    <button key={m} onClick={() => snoozeTask(task.id, m)} style={{ background: isNight ? '#2D3561' : '#FFF0DC', color: isNight ? '#9B8EC4' : '#F4845F', border: `1px solid ${isNight ? '#3D4575' : '#F4C89A'}`, borderRadius: 10, padding: '3px 7px', fontSize: 10, cursor: 'pointer', whiteSpace: 'nowrap' }}>{m}分</button>
+                  ))}
+                </>
+              )}
             </div>
-            {!task.done && (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                <button onClick={() => completeTask(task.id)} style={{ background: '#7AB87E', color: 'white', border: 'none', borderRadius: 20, padding: '5px 14px', fontSize: 11, fontWeight: 'bold', cursor: 'pointer' }}>完了</button>
-                <span style={{ fontSize: 10, color: isNight ? '#7A70A0' : '#A0876E' }}>スヌーズ：</span>
-                {[15, 30, 60, 120].map(m => (
-                  <button key={m} onClick={() => snoozeTask(task.id, m)} style={{ background: isNight ? '#2D3561' : '#FFF0DC', color: isNight ? '#9B8EC4' : '#F4845F', border: `1px solid ${isNight ? '#3D4575' : '#F4C89A'}`, borderRadius: 12, padding: '3px 7px', fontSize: 10, cursor: 'pointer' }}>{m}分</button>
-                ))}
+          ) : (
+            <div key={task.id} style={{ background: cardBg, borderRadius: 16, padding: '14px 16px', borderLeft: `4px solid ${isNight ? '#6B5FA0' : '#F4845F'}`, opacity: task.done ? 0.5 : 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontWeight: 'bold', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 14 }}>{task.done ? '✅ ' : ''}{task.name}</span>
+                <span style={{ fontSize: 11, background: isNight ? '#2D3561' : '#FFF0DC', color: isNight ? '#9B8EC4' : '#C46020', padding: '2px 8px', borderRadius: 10 }}>⏰ {task.time}{task.end_time ? `〜${task.end_time}` : ''}</span>
               </div>
-            )}
-          </div>
-        ))}
+              {task.date && <div style={{ fontSize: 11, color: isNight ? '#7A70A0' : '#A0876E', marginBottom: 8 }}>📅 {task.date}{task.buffer > 0 ? ` ＋${task.buffer}分バッファ` : ''}</div>}
+              {!task.done && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button onClick={() => completeTask(task.id)} style={{ background: '#7AB87E', color: 'white', border: 'none', borderRadius: 20, padding: '5px 14px', fontSize: 11, fontWeight: 'bold', cursor: 'pointer' }}>完了</button>
+                  <span style={{ fontSize: 10, color: isNight ? '#7A70A0' : '#A0876E' }}>スヌーズ：</span>
+                  {[15, 30, 60, 120].map(m => (
+                    <button key={m} onClick={() => snoozeTask(task.id, m)} style={{ background: isNight ? '#2D3561' : '#FFF0DC', color: isNight ? '#9B8EC4' : '#F4845F', border: `1px solid ${isNight ? '#3D4575' : '#F4C89A'}`, borderRadius: 12, padding: '3px 7px', fontSize: 10, cursor: 'pointer' }}>{m}分</button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
+        {/* タスク追加フォーム */}
         {showForm && (
-          <div style={{ background: cardBg, borderRadius: 16, padding: '16px', marginBottom: 10 }}>
-            <input type="text" placeholder="タスク名を入力" value={newTask} onChange={e => setNewTask(e.target.value)}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, marginBottom: 10, border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`, background: isNight ? '#2E3450' : '#FFF8EE', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 14, outline: 'none' }} />
-            <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, marginBottom: 12, border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`, background: isNight ? '#2E3450' : '#FFF8EE', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 14, outline: 'none' }} />
+          <div style={{ background: cardBg, borderRadius: 16, padding: '16px', marginTop: 10 }}>
+            {warning && <div style={{ background: '#FFE0E0', color: '#C04040', borderRadius: 10, padding: '8px 12px', marginBottom: 10, fontSize: 13, fontWeight: 'bold' }}>{warning}</div>}
+            <input type="text" placeholder="タスク名を入力" value={newTask} onChange={e => setNewTask(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, marginBottom: 10, border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`, background: isNight ? '#2E3450' : '#FFF8EE', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 14, outline: 'none' }} />
+            <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, marginBottom: 10, border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`, background: isNight ? '#2E3450' : '#FFF8EE', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 14, outline: 'none' }} />
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, color: isNight ? '#9B8EC4' : '#A0876E', marginBottom: 4 }}>開始時刻</div>
+                <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`, background: isNight ? '#2E3450' : '#FFF8EE', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 14, outline: 'none' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, color: isNight ? '#9B8EC4' : '#A0876E', marginBottom: 4 }}>終了時刻</div>
+                <input type="time" value={newEndTime} onChange={e => setNewEndTime(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${isNight ? '#4D5585' : '#E8C8A0'}`, background: isNight ? '#2E3450' : '#FFF8EE', color: isNight ? '#E8E0F5' : '#4A2E1A', fontSize: 14, outline: 'none' }} />
+              </div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 11, color: isNight ? '#9B8EC4' : '#A0876E', marginBottom: 6 }}>バッファ時間（前後の余白）</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[0, 15, 30, 60].map(m => (
+                  <button key={m} onClick={() => setNewBuffer(m)} style={{ flex: 1, background: newBuffer === m ? (isNight ? '#6B5FA0' : '#F4845F') : (isNight ? '#2D3561' : '#FFF0DC'), color: newBuffer === m ? 'white' : (isNight ? '#9B8EC4' : '#C46020'), border: 'none', borderRadius: 10, padding: '6px', fontSize: 12, fontWeight: 'bold', cursor: 'pointer' }}>{m === 0 ? 'なし' : `${m}分`}</button>
+                ))}
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={addTask} style={{ flex: 1, background: isNight ? '#4A5E8A' : '#7AB87E', color: 'white', border: 'none', borderRadius: 12, padding: '10px', fontSize: 14, fontWeight: 'bold', cursor: 'pointer' }}>追加する</button>
-              <button onClick={() => { setShowForm(false); setVoiceStatus('タスクを声で追加できるよ'); }} style={{ flex: 1, background: isNight ? '#384068' : '#F0E0CC', color: isNight ? '#9B8EC4' : '#A0876E', border: 'none', borderRadius: 12, padding: '10px', fontSize: 14, cursor: 'pointer' }}>キャンセル</button>
+              <button onClick={() => { setShowForm(false); setWarning(''); setVoiceStatus('タスクを声で追加できるよ'); }} style={{ flex: 1, background: isNight ? '#384068' : '#F0E0CC', color: isNight ? '#9B8EC4' : '#A0876E', border: 'none', borderRadius: 12, padding: '10px', fontSize: 14, cursor: 'pointer' }}>キャンセル</button>
             </div>
           </div>
         )}
       </div>
 
+      {/* 追加ボタン */}
       <div style={{ padding: '8px 16px 32px' }}>
         <button onClick={() => setShowForm(true)} style={{ width: '100%', background: isNight ? '#4A5E8A' : '#7AB87E', color: 'white', border: 'none', borderRadius: 16, padding: 14, fontSize: 15, fontWeight: 'bold', cursor: 'pointer' }}>＋ タスクを追加する</button>
       </div>

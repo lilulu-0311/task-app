@@ -58,6 +58,18 @@ export default function Home() {
     tennen:  ['えへへ〜できたね！', 'すごいね〜！', 'やったね、えらいえらい〜', 'ふふ、一緒にがんばろ〜'],
   };
 
+  const greetLines = {
+    imouto:  ['よろしくね！一緒にがんばろ！', 'わたしに任せて！', 'きたきた！やるよ！'],
+    oniisan: ['俺が来た。', 'よし、始めるか。', '任せろ。'],
+    tennen:  ['えへへ〜よろしくね〜', 'いっしょにがんばろうね〜', 'わあ、呼んでくれた〜'],
+  };
+
+  const addLines = {
+    imouto:  ['オッケー！追加したよ！', 'やった、新しいタスクだ！', 'まかせて！'],
+    oniisan: ['登録した。', '了解。', 'タスク追加完了。'],
+    tennen:  ['はーい、追加したよ〜', 'わかった〜！', 'えへへ、登録したね〜'],
+  };
+
   const charaSpeaker = { imouto: 3, oniisan: 13, tennen: 10 };
 
   const speakVoicevox = async (text: string, speaker: number) => {
@@ -238,6 +250,10 @@ export default function Home() {
     if (data) setTasks([...tasks, data]);
     setNewTask(''); setNewTime(''); setNewEndTime(''); setNewBuffer(15); setShowForm(false);
     setVoiceStatus('タスクを声で追加できるよ');
+    const addMsg = addLines[chara][Math.floor(Math.random() * addLines[chara].length)];
+    setCharaSpeech(addMsg);
+    speakVoicevox(addMsg, charaSpeaker[chara]);
+    setTimeout(() => setCharaSpeech(''), 2500);
   };
 
   const addFromTemplate = async (template: Template) => {
@@ -340,7 +356,7 @@ export default function Home() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 20px 0' }}>
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           {(Object.keys(charaConfig) as Array<keyof typeof charaConfig>).map(key => (
-            <button key={key} onClick={() => setChara(key)} style={{ background: chara === key ? (isNight ? '#6B5FA0' : '#F4845F') : (isNight ? '#2D3561' : '#FFF0DC'), color: chara === key ? 'white' : (isNight ? '#9B8EC4' : '#C46020'), border: 'none', borderRadius: 12, padding: '4px 12px', fontSize: 11, fontWeight: 'bold', cursor: 'pointer' }}>{charaConfig[key].label}</button>
+            <button key={key} onClick={() => { setChara(key); const msg = greetLines[key][Math.floor(Math.random() * greetLines[key].length)]; setCharaSpeech(msg); speakVoicevox(msg, charaSpeaker[key]); setTimeout(() => setCharaSpeech(''), 2500); }} style={{ background: chara === key ? (isNight ? '#6B5FA0' : '#F4845F') : (isNight ? '#2D3561' : '#FFF0DC'), color: chara === key ? 'white' : (isNight ? '#9B8EC4' : '#C46020'), border: 'none', borderRadius: 12, padding: '4px 12px', fontSize: 11, fontWeight: 'bold', cursor: 'pointer' }}>{charaConfig[key].label}</button>
           ))}
         </div>
         <div style={{ position: 'relative', width: 120, height: 158 }}>

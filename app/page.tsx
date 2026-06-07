@@ -84,7 +84,11 @@ export default function Home() {
       const audio = new Audio(url);
       audio.play();
     } catch {
-      // VOICEVOXが起動していない場合は無音で続行
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ja-JP';
+        window.speechSynthesis.speak(utterance);
+      }
     }
   };
 

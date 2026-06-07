@@ -58,11 +58,30 @@ export default function Home() {
     tennen:  ['えへへ〜できたね！', 'すごいね〜！', 'やったね、えらいえらい〜', 'ふふ、一緒にがんばろ〜'],
   };
 
+  const charaSpeaker = { imouto: 3, oniisan: 13, tennen: 10 };
+
+  const speakVoicevox = async (text: string, speaker: number) => {
+    try {
+      const queryRes = await fetch(`http://localhost:50021/audio_query?text=${encodeURIComponent(text)}&speaker=${speaker}`, { method: 'POST' });
+      if (!queryRes.ok) return;
+      const query = await queryRes.json();
+      const synthRes = await fetch(`http://localhost:50021/synthesis?speaker=${speaker}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(query) });
+      if (!synthRes.ok) return;
+      const blob = await synthRes.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.play();
+    } catch {
+      // VOICEVOXが起動していない場合は無音で続行
+    }
+  };
+
   const showPraise = () => {
     const lines = praiseLines[chara];
     const msg = lines[Math.floor(Math.random() * lines.length)];
     setPraise(msg);
     setCharaSpeech(msg);
+    speakVoicevox(msg, charaSpeaker[chara]);
     setTimeout(() => { setPraise(''); setCharaSpeech(''); }, 2500);
   };
 

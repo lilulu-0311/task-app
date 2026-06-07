@@ -176,8 +176,12 @@ export default function Home() {
   };
 
   const completeTask = async (id: number) => {
-    await supabase.from('tasks').update({ done: true }).eq('id', id);
-    setTasks(tasks.map(t => t.id === id ? { ...t, done: true } : t));
+    const task = tasks.find(t => t.id === id);
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const updateData: Partial<Task> = { done: true, ...(!task?.date ? { date: todayStr } : {}) };
+    await supabase.from('tasks').update(updateData).eq('id', id);
+    setTasks(tasks.map(t => t.id === id ? { ...t, ...updateData } : t));
     if (alarmTask?.id === id) setAlarmTask(null);
     showPraise();
   };
@@ -199,7 +203,7 @@ export default function Home() {
       done: false,
     }).select().single();
     if (data) setTasks([...tasks, data]);
-    setNewTask(''); setNewTime(''); setNewEndTime(''); setShowForm(false);
+    setNewTask(''); setNewTime(''); setNewEndTime(''); setNewBuffer(15); setShowForm(false);
     setVoiceStatus('タスクを声で追加できるよ');
   };
 
@@ -209,7 +213,7 @@ export default function Home() {
       time: template.time,
       end_time: '',
       date: newDate,
-      buffer: 15,
+      buffer: 0,
       done: false,
     }).select().single();
     if (data) setTasks([...tasks, data]);
@@ -240,6 +244,7 @@ export default function Home() {
     ? tasks.filter(t => !t.date || t.date === filterDate)
     : tasks
   ).sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
     if (a.date && b.date && a.date !== b.date) return a.date.localeCompare(b.date);
     if (a.time === '--:--') return 1;
     if (b.time === '--:--') return -1;
@@ -405,7 +410,7 @@ export default function Home() {
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={addTask} style={{ flex: 1, background: isNight ? '#4A5E8A' : '#7AB87E', color: 'white', border: 'none', borderRadius: 12, padding: '10px', fontSize: 14, fontWeight: 'bold', cursor: 'pointer' }}>追加する</button>
-              <button onClick={() => { setShowForm(false); setWarning(''); setVoiceStatus('タスクを声で追加できるよ'); }} style={{ flex: 1, background: isNight ? '#384068' : '#F0E0CC', color: isNight ? '#9B8EC4' : '#A0876E', border: 'none', borderRadius: 12, padding: '10px', fontSize: 14, cursor: 'pointer' }}>キャンセル</button>
+              <button onClick={() => { setShowForm(false); setWarning(''); setNewBuffer(15); setVoiceStatus('タスクを声で追加できるよ'); }} style={{ flex: 1, background: isNight ? '#384068' : '#F0E0CC', color: isNight ? '#9B8EC4' : '#A0876E', border: 'none', borderRadius: 12, padding: '10px', fontSize: 14, cursor: 'pointer' }}>キャンセル</button>
             </div>
           </div>
         )}

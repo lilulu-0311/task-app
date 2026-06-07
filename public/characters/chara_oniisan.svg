@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 210" width="160" height="210">
+  <!-- legs -->
+  <rect x="55" y="185" width="16" height="22" rx="6" fill="#2C3E6B"/>
+  <rect x="89" y="185" width="16" height="22" rx="6" fill="#2C3E6B"/>
+  <ellipse cx="63" cy="207" rx="12" ry="5" fill="#1A2744"/>
+  <ellipse cx="97" cy="207" rx="12" ry="5" fill="#1A2744"/>
+  <!-- body (jacket) -->
+  <ellipse cx="80" cy="158" rx="36" ry="38" fill="#1D3461"/>
+  <!-- jacket detail -->
+  <rect x="75" y="128" width="10" height="42" rx="2" fill="#152850"/>
+  <ellipse cx="80" cy="145" rx="16" ry="10" fill="#243F75" opacity="0.6"/>
+  <!-- collar -->
+  <path d="M66,128 L80,138 L94,128 L94,122 L80,132 L66,122Z" fill="#E8E8F0"/>
+  <!-- arms (crossed / relaxed at sides) -->
+  <ellipse cx="40" cy="158" rx="12" ry="28" fill="#1D3461"/>
+  <circle cx="38" cy="183" r="10" fill="#FFDDC1"/>
+  <ellipse cx="120" cy="158" rx="12" ry="28" fill="#1D3461"/>
+  <circle cx="122" cy="183" r="10" fill="#FFDDC1"/>
+  <!-- neck -->
+  <ellipse cx="80" cy="122" rx="13" ry="9" fill="#FFDDC1"/>
+  <!-- HEAD -->
+  <circle cx="80" cy="70" r="60" fill="#FFDDC1"/>
+  <!-- hair base -->
+  <ellipse cx="80" cy="20" rx="58" ry="36" fill="#1E2030"/>
+  <!-- side swept bang (left) -->
+  <ellipse cx="48" cy="46" rx="30" ry="20" fill="#1E2030" transform="rotate(10,48,46)"/>
+  <!-- hair right side shorter -->
+  <ellipse cx="112" cy="42" rx="18" ry="14" fill="#1E2030"/>
+  <!-- small side hair strands -->
+  <path d="M22,60 Q18,75 24,85" stroke="#1E2030" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M138,58 Q142,70 140,80" stroke="#1E2030" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <!-- LEFT EYE (half-lidded/cool) -->
+  <ellipse cx="57" cy="72" rx="15" ry="12" fill="white"/>
+  <ellipse cx="57" cy="73" rx="11" ry="9" fill="#2E5090"/>
+  <ellipse cx="57" cy="74" rx="7" ry="6" fill="#0D1F40"/>
+  <circle cx="53" cy="70" r="3" fill="white"/>
+  <!-- cool eyelid (heavy) -->
+  <path d="M42,67 Q57,60 72,67" stroke="#1E2030" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M43,70 Q57,64 71,70" stroke="#1E2030" stroke-width="1.5" fill="#1E2030" opacity="0.3"/>
+  <!-- RIGHT EYE (half-lidded/cool) -->
+  <ellipse cx="103" cy="72" rx="15" ry="12" fill="white"/>
+  <ellipse cx="103" cy="73" rx="11" ry="9" fill="#2E5090"/>
+  <ellipse cx="103" cy="74" rx="7" ry="6" fill="#0D1F40"/>
+  <circle cx="99" cy="70" r="3" fill="white"/>
+  <path d="M88,67 Q103,60 118,67" stroke="#1E2030" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M89,70 Q103,64 117,70" stroke="#1E2030" stroke-width="1.5" fill="#1E2030" opacity="0.3"/>
+  <!-- subtle blush -->
+  <ellipse cx="40" cy="82" rx="11" ry="6" fill="#FFB8A0" opacity="0.3"/>
+  <ellipse cx="120" cy="82" rx="11" ry="6" fill="#FFB8A0" opacity="0.3"/>
+  <!-- nose -->
+  <ellipse cx="80" cy="86" rx="2.5" ry="2" fill="#C8916A" opacity="0.6"/>
+  <!-- mouth (slight cool smirk) -->
+  <path d="M68,99 Q74,104 88,100" stroke="#A0604A" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- cool sparkle (subtle) -->
+  <path d="M138,38 l1.5,-4 1.5,4 4,1.5 -4,1.5 -1.5,4 -1.5,-4 -4,-1.5Z" fill="#A8C4FF" opacity="0.8"/>
+</svg>

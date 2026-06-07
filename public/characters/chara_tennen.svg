@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 210" width="160" height="210">
+  <!-- legs -->
+  <rect x="57" y="185" width="15" height="20" rx="7" fill="#F5C5A3"/>
+  <rect x="88" y="185" width="15" height="20" rx="7" fill="#F5C5A3"/>
+  <ellipse cx="64" cy="205" rx="11" ry="5" fill="#C8A8D8"/>
+  <ellipse cx="95" cy="205" rx="11" ry="5" fill="#C8A8D8"/>
+  <!-- body (soft lavender dress) -->
+  <ellipse cx="80" cy="158" rx="36" ry="38" fill="#C8B6E2"/>
+  <ellipse cx="80" cy="145" rx="22" ry="14" fill="#DDD0F0" opacity="0.6"/>
+  <!-- lace/ruffle detail -->
+  <path d="M44,168 Q55,175 66,168 Q77,175 88,168 Q99,175 110,168 Q116,163 116,168" stroke="#E8D8F8" stroke-width="3" fill="none"/>
+  <!-- flower held (right hand) -->
+  <circle cx="128" cy="168" r="7" fill="#FFD4E8"/>
+  <circle cx="128" cy="168" r="4" fill="#FFB0D0"/>
+  <circle cx="134" cy="162" r="5" fill="#FFD4E8"/>
+  <circle cx="134" cy="162" r="3" fill="#FFB0D0"/>
+  <circle cx="122" cy="162" r="5" fill="#FFD4E8"/>
+  <circle cx="122" cy="162" r="3" fill="#FFB0D0"/>
+  <circle cx="128" cy="156" r="5" fill="#FFD4E8"/>
+  <circle cx="128" cy="156" r="3" fill="#FFB0D0"/>
+  <circle cx="128" cy="163" r="5" fill="#FFEECC"/>
+  <!-- arms (gentle, one toward flower) -->
+  <ellipse cx="40" cy="155" rx="11" ry="26" fill="#C8B6E2"/>
+  <circle cx="38" cy="178" r="9" fill="#F5C5A3"/>
+  <ellipse cx="120" cy="155" rx="11" ry="26" fill="#C8B6E2"/>
+  <circle cx="122" cy="174" r="9" fill="#F5C5A3"/>
+  <!-- neck -->
+  <ellipse cx="80" cy="122" rx="13" ry="9" fill="#F5C5A3"/>
+  <!-- HEAD -->
+  <circle cx="80" cy="70" r="60" fill="#F5C5A3"/>
+  <!-- fluffy hair (multiple overlapping circles for softness) -->
+  <circle cx="80" cy="16" r="38" fill="#D4A36A"/>
+  <circle cx="46" cy="28" r="28" fill="#D4A36A"/>
+  <circle cx="114" cy="28" r="28" fill="#D4A36A"/>
+  <circle cx="28" cy="52" r="22" fill="#D4A36A"/>
+  <circle cx="132" cy="52" r="22" fill="#D4A36A"/>
+  <circle cx="36" cy="38" r="24" fill="#D4A36A"/>
+  <circle cx="124" cy="38" r="24" fill="#D4A36A"/>
+  <!-- hair highlight/sheen -->
+  <ellipse cx="68" cy="25" rx="15" ry="8" fill="#E8C080" opacity="0.5"/>
+  <!-- small flower in hair -->
+  <circle cx="130" cy="42" r="9" fill="#FFD4E8"/>
+  <circle cx="130" cy="42" r="5" fill="#FFB0D0"/>
+  <circle cx="138" cy="36" r="7" fill="#FFD4E8"/>
+  <circle cx="122" cy="36" r="7" fill="#FFD4E8"/>
+  <circle cx="130" cy="32" r="7" fill="#FFD4E8"/>
+  <circle cx="130" cy="40" r="6" fill="#FFEECC"/>
+  <!-- LEFT EYE (soft, slightly droopy/dreamy) -->
+  <ellipse cx="57" cy="72" rx="15" ry="14" fill="white"/>
+  <ellipse cx="57" cy="73" rx="11" ry="10" fill="#9B6FA5"/>
+  <ellipse cx="57" cy="74" rx="7" ry="7" fill="#5A2D7A"/>
+  <circle cx="52" cy="68" r="3.5" fill="white"/>
+  <circle cx="60" cy="67" r="1.8" fill="white"/>
+  <path d="M43,65 Q57,58 71,65" stroke="#7A4A30" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- dreamy lower lash -->
+  <path d="M46,79 Q57,83 68,79" stroke="#9B6FA5" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <!-- RIGHT EYE (soft, slightly droopy/dreamy) -->
+  <ellipse cx="103" cy="72" rx="15" ry="14" fill="white"/>
+  <ellipse cx="103" cy="73" rx="11" ry="10" fill="#9B6FA5"/>
+  <ellipse cx="103" cy="74" rx="7" ry="7" fill="#5A2D7A"/>
+  <circle cx="98" cy="68" r="3.5" fill="white"/>
+  <circle cx="106" cy="67" r="1.8" fill="white"/>
+  <path d="M89,65 Q103,58 117,65" stroke="#7A4A30" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M92,79 Q103,83 114,79" stroke="#9B6FA5" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <!-- soft blush -->
+  <ellipse cx="40" cy="84" rx="13" ry="7" fill="#FFB8CC" opacity="0.5"/>
+  <ellipse cx="120" cy="84" rx="13" ry="7" fill="#FFB8CC" opacity="0.5"/>
+  <!-- nose -->
+  <ellipse cx="80" cy="88" rx="2.5" ry="2" fill="#D9906A" opacity="0.6"/>
+  <!-- gentle soft smile -->
+  <path d="M65,99 Q80,112 95,99" stroke="#C06080" stroke-width="2" fill="#FFCCD8" opacity="0.8"/>
+  <!-- floating sparkles (dreamy) -->
+  <circle cx="22" cy="40" r="3" fill="#E8D0F8" opacity="0.8"/>
+  <circle cx="18" cy="55" r="2" fill="#E8D0F8" opacity="0.6"/>
+  <circle cx="145" cy="55" r="2.5" fill="#E8D0F8" opacity="0.7"/>
+  <path d="M142,30 l1.5,-4 1.5,4 4,1.5 -4,1.5 -1.5,4 -1.5,-4 -4,-1.5Z" fill="#E8D0F8" opacity="0.8"/>
+</svg>

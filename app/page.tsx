@@ -41,15 +41,29 @@ export default function Home() {
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateTime, setNewTemplateTime] = useState('');
+  const [chara, setChara] = useState<'imouto' | 'oniisan' | 'tennen'>('imouto');
+  const [charaSpeech, setCharaSpeech] = useState('');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
 
-  const praiseMessages = ['やったね！✨', 'すごい！その調子！', '一歩前進！🎉', 'よくできました！', '素晴らしい！🌟'];
+  const charaConfig = {
+    imouto:  { label: '妹系',    img: '/characters/chara_imouto.svg'  },
+    oniisan: { label: 'お兄さん系', img: '/characters/chara_oniisan.svg' },
+    tennen:  { label: '天然系',  img: '/characters/chara_tennen.svg'  },
+  };
+
+  const praiseLines = {
+    imouto:  ['やったじゃん！すごい！', 'えらい！その調子だよ！', 'やった〜！一緒に喜ぶ！', 'もう最高！どんどんいこ！'],
+    oniisan: ['よくやった。', '悪くない。次も頼む。', '一つ片付いたな。', 'その調子だ。'],
+    tennen:  ['えへへ〜できたね！', 'すごいね〜！', 'やったね、えらいえらい〜', 'ふふ、一緒にがんばろ〜'],
+  };
 
   const showPraise = () => {
-    const msg = praiseMessages[Math.floor(Math.random() * praiseMessages.length)];
+    const lines = praiseLines[chara];
+    const msg = lines[Math.floor(Math.random() * lines.length)];
     setPraise(msg);
-    setTimeout(() => setPraise(''), 2000);
+    setCharaSpeech(msg);
+    setTimeout(() => { setPraise(''); setCharaSpeech(''); }, 2500);
   };
 
   useEffect(() => {
@@ -303,8 +317,26 @@ export default function Home() {
         <div style={{ color: 'white', fontSize: 18, fontWeight: 'bold', lineHeight: 1.5, whiteSpace: 'pre-line' }}>{greeting}</div>
       </div>
 
+      {/* キャラクター */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 20px 0' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          {(Object.keys(charaConfig) as Array<keyof typeof charaConfig>).map(key => (
+            <button key={key} onClick={() => setChara(key)} style={{ background: chara === key ? (isNight ? '#6B5FA0' : '#F4845F') : (isNight ? '#2D3561' : '#FFF0DC'), color: chara === key ? 'white' : (isNight ? '#9B8EC4' : '#C46020'), border: 'none', borderRadius: 12, padding: '4px 12px', fontSize: 11, fontWeight: 'bold', cursor: 'pointer' }}>{charaConfig[key].label}</button>
+          ))}
+        </div>
+        <div style={{ position: 'relative', width: 120, height: 158 }}>
+          <img src={charaConfig[chara].img} width={120} height={158} alt={charaConfig[chara].label} style={{ filter: isNight ? 'brightness(0.9)' : 'none' }} />
+          {charaSpeech && (
+            <div style={{ position: 'absolute', top: -44, left: '50%', transform: 'translateX(-50%)', background: 'white', color: '#4A2E1A', borderRadius: 14, padding: '6px 12px', fontSize: 12, fontWeight: 'bold', whiteSpace: 'nowrap', boxShadow: '0 3px 12px rgba(0,0,0,0.15)', border: `2px solid ${isNight ? '#6B5FA0' : '#F4845F'}` }}>
+              {charaSpeech}
+              <div style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: `8px solid ${isNight ? '#6B5FA0' : '#F4845F'}` }} />
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* 音声入力 */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 20px 12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 20px 12px' }}>
         <button onClick={startVoice} style={{ width: 80, height: 80, borderRadius: '50%', background: listening ? 'linear-gradient(135deg, #E05050, #F08080)' : isNight ? 'linear-gradient(135deg, #2D3561, #6B5FA0)' : 'linear-gradient(135deg, #F4845F, #F9B347)', border: listening ? '3px solid #FF6060' : 'none', cursor: 'pointer', fontSize: 28, color: 'white', boxShadow: listening ? '0 0 20px rgba(255,100,100,0.5)' : '0 6px 24px rgba(0,0,0,0.2)', transform: listening ? 'scale(1.08)' : 'scale(1)', transition: 'all 0.2s' }}>🎤</button>
         <p style={{ color: isNight ? '#7A70A0' : '#C48050', fontSize: 12, marginTop: 8, textAlign: 'center' }}>{voiceStatus}</p>
       </div>

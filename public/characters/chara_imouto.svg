@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 210" width="160" height="210">
+  <!-- legs -->
+  <rect x="57" y="185" width="15" height="20" rx="6" fill="#FFCBA4"/>
+  <rect x="88" y="185" width="15" height="20" rx="6" fill="#FFCBA4"/>
+  <ellipse cx="64" cy="205" rx="11" ry="5" fill="#E63946"/>
+  <ellipse cx="95" cy="205" rx="11" ry="5" fill="#E63946"/>
+  <!-- body -->
+  <ellipse cx="80" cy="158" rx="36" ry="38" fill="#FF6B8A"/>
+  <ellipse cx="80" cy="145" rx="22" ry="14" fill="#FF8FA3" opacity="0.5"/>
+  <!-- arms (raised) -->
+  <ellipse cx="38" cy="140" rx="11" ry="24" fill="#FFCBA4" transform="rotate(28,38,140)"/>
+  <circle cx="28" cy="120" r="9" fill="#FFCBA4"/>
+  <ellipse cx="122" cy="140" rx="11" ry="24" fill="#FFCBA4" transform="rotate(-28,122,140)"/>
+  <circle cx="132" cy="120" r="9" fill="#FFCBA4"/>
+  <!-- bow -->
+  <path d="M66,136 L80,145 L94,136 L80,128Z" fill="#CC2244"/>
+  <circle cx="80" cy="136" r="5" fill="#FF4466"/>
+  <!-- twin tails (back) -->
+  <ellipse cx="24" cy="92" rx="14" ry="32" fill="#5C3317" transform="rotate(-18,24,92)"/>
+  <ellipse cx="136" cy="92" rx="14" ry="32" fill="#5C3317" transform="rotate(18,136,92)"/>
+  <!-- neck -->
+  <ellipse cx="80" cy="122" rx="13" ry="9" fill="#FFCBA4"/>
+  <!-- HEAD -->
+  <circle cx="80" cy="70" r="60" fill="#FFCBA4"/>
+  <!-- hair top -->
+  <ellipse cx="80" cy="22" rx="56" ry="34" fill="#5C3317"/>
+  <ellipse cx="50" cy="48" rx="22" ry="17" fill="#5C3317"/>
+  <ellipse cx="80" cy="42" rx="18" ry="14" fill="#5C3317"/>
+  <ellipse cx="110" cy="48" rx="22" ry="17" fill="#5C3317"/>
+  <!-- twin tail ties -->
+  <circle cx="26" cy="64" r="8" fill="#FF69B4"/>
+  <circle cx="134" cy="64" r="8" fill="#FF69B4"/>
+  <!-- LEFT EYE -->
+  <ellipse cx="57" cy="70" rx="15" ry="17" fill="white"/>
+  <ellipse cx="57" cy="71" rx="11" ry="13" fill="#4A90D9"/>
+  <ellipse cx="57" cy="72" rx="7" ry="9" fill="#1A3A6B"/>
+  <circle cx="52" cy="66" r="4" fill="white"/>
+  <circle cx="60" cy="64" r="2" fill="white"/>
+  <path d="M43,61 Q57,54 71,61" stroke="#3B2314" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- RIGHT EYE -->
+  <ellipse cx="103" cy="70" rx="15" ry="17" fill="white"/>
+  <ellipse cx="103" cy="71" rx="11" ry="13" fill="#4A90D9"/>
+  <ellipse cx="103" cy="72" rx="7" ry="9" fill="#1A3A6B"/>
+  <circle cx="98" cy="66" r="4" fill="white"/>
+  <circle cx="106" cy="64" r="2" fill="white"/>
+  <path d="M89,61 Q103,54 117,61" stroke="#3B2314" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- blush -->
+  <ellipse cx="40" cy="82" rx="12" ry="7" fill="#FFB8CC" opacity="0.65"/>
+  <ellipse cx="120" cy="82" rx="12" ry="7" fill="#FFB8CC" opacity="0.65"/>
+  <!-- nose -->
+  <ellipse cx="80" cy="86" rx="2.5" ry="2" fill="#DDA07A" opacity="0.6"/>
+  <!-- smile -->
+  <path d="M60,97 Q80,114 100,97" stroke="#CC3355" stroke-width="2.5" fill="#FFAABB"/>
+  <!-- sparkles -->
+  <path d="M136,34 l2,-6 2,6 6,2 -6,2 -2,6 -2,-6 -6,-2Z" fill="#FFD700"/>
+  <path d="M16,42 l1.5,-4.5 1.5,4.5 4.5,1.5 -4.5,1.5 -1.5,4.5 -1.5,-4.5 -4.5,-1.5Z" fill="#FFD700"/>
+</svg>

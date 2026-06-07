@@ -47,9 +47,9 @@ export default function Home() {
   const recognitionRef = useRef<any>(null);
 
   const charaConfig = {
-    imouto:  { label: '妹系',    img: '/characters/chara_imouto.svg'  },
-    oniisan: { label: 'お兄さん系', img: '/characters/chara_oniisan.svg' },
-    tennen:  { label: '天然系',  img: '/characters/chara_tennen.svg'  },
+    imouto:  { label: '妹系',    img: '/characters/chara_imouto.jpg'  },
+    oniisan: { label: 'お兄さん系', img: '/characters/chara_oniisan.jpg' },
+    tennen:  { label: '天然系',  img: '/characters/chara_tennen.jpg'  },
   };
 
   const praiseLines = {

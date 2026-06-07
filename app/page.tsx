@@ -212,7 +212,7 @@ export default function Home() {
       name: template.name,
       time: template.time,
       end_time: '',
-      date: newDate,
+      date: filterDate || newDate,
       buffer: 0,
       done: false,
     }).select().single();
@@ -241,7 +241,10 @@ export default function Home() {
   const greeting = isNight ? 'おつかれさま、利恵さん 🌙\nゆっくり明日の準備をしよう' : 'おはよう、利恵さん ☀️\n今日も一緒に進もうね';
 
   const filteredTasks = (filterDate
-    ? tasks.filter(t => !t.date || t.date === filterDate)
+    ? tasks.filter(t => {
+        if (t.done && !t.date) return false;
+        return !t.date || t.date === filterDate;
+      })
     : tasks
   ).sort((a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;

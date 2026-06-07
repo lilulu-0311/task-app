@@ -245,7 +245,7 @@ export default function Home() {
         if (t.done && !t.date) return false;
         return !t.date || t.date === filterDate;
       })
-    : tasks
+    : tasks.filter(t => !t.done)
   ).sort((a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;
     if (a.date && b.date && a.date !== b.date) return a.date.localeCompare(b.date);

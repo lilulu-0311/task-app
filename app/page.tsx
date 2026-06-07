@@ -72,23 +72,29 @@ export default function Home() {
 
   const charaSpeaker = { imouto: 3, oniisan: 13, tennen: 10 };
 
+  const speakWeb = (text: string) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    window.speechSynthesis.speak(utterance);
+  };
+
   const speakVoicevox = async (text: string, speaker: number) => {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocal) { speakWeb(text); return; }
     try {
       const queryRes = await fetch(`http://localhost:50021/audio_query?text=${encodeURIComponent(text)}&speaker=${speaker}`, { method: 'POST' });
-      if (!queryRes.ok) return;
+      if (!queryRes.ok) throw new Error();
       const query = await queryRes.json();
       const synthRes = await fetch(`http://localhost:50021/synthesis?speaker=${speaker}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(query) });
-      if (!synthRes.ok) return;
+      if (!synthRes.ok) throw new Error();
       const blob = await synthRes.blob();
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audio.play();
     } catch {
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ja-JP';
-        window.speechSynthesis.speak(utterance);
-      }
+      speakWeb(text);
     }
   };
 
